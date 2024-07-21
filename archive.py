@@ -5,8 +5,8 @@
 # folder_path = 'cot-fspot'
 # dataset = utils.load_dataset(folder_path)
 #
-# start_pointer_file_path = 'outputs/start-pointer.txt'
-# next_file_index_file_path = 'outputs/next-file-index.txt'
+# start_pointer_file_path = 'outputs-cot-fsopt/start-pointer.txt'
+# next_file_index_file_path = 'outputs-cot-fsopt/next-file-index.txt'
 #
 # start_pointer = utils.read_integer_from_file(start_pointer_file_path)
 # next_file_index = utils.read_integer_from_file(next_file_index_file_path)
@@ -17,7 +17,7 @@
 #     return result
 #
 #
-# file_name = config.get_file_name('outputs', next_file_index, 'cot-fspot', 'csv')
+# file_name = config.get_file_name('outputs-cot-fsopt', next_file_index, 'cot-fspot', 'csv')
 # start_time = utils.get_current_time()
 #
 # block_end = 120000
@@ -58,13 +58,13 @@
 # import config, utils
 # from multi_thread_handler import MultiThreadHandler
 #
-# start_pointer_file_path = 'outputs-1k/start-pointer.txt'
-# next_file_index_file_path = 'outputs-1k/next-file-index.txt'
+# start_pointer_file_path = 'outputs-cot-fsopt-cot-zshot/start-pointer.txt'
+# next_file_index_file_path = 'outputs-cot-fsopt-cot-zshot/next-file-index.txt'
 #
 # start_pointer = utils.read_integer_from_file(start_pointer_file_path)
 # next_file_index = utils.read_integer_from_file(next_file_index_file_path)
 #
-# file_name = config.get_file_name('outputs-1k', next_file_index, 'cot-zspot', 'csv')
+# file_name = config.get_file_name('outputs-cot-fsopt-cot-zshot', next_file_index, 'cot-zspot', 'csv')
 # start_time = utils.get_current_time()
 # content_len = len(dataset)
 # # start_pointer = 111400
