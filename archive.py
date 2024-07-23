@@ -168,3 +168,22 @@
 # # Save the workbook
 # wb.save(config.SPREADSHEET_NAME)
 # print(f"Excel file '{config.SPREADSHEET_NAME}' created and populated successfully.")
+
+## Verify Token Access
+# from huggingface_hub import HfApi
+#
+#
+# def verify_repository(repo_id: str, token: str):
+#     api = HfApi()
+#     try:
+#         repo_info = api.repo_info(repo_id, token=token, repo_type="dataset")
+#         print(f"Repository {repo_id} exists and is accessible.")
+#     except RepositoryNotFoundError:
+#         print(f"Repository {repo_id} does not exist. Please create it or check the repository ID.")
+#         raise
+#     except Exception as e:
+#         print(f"An error occurred while verifying the repository: {str(e)}")
+#         raise
+#
+#
+# verify_repository(repo_id, HfFolder.get_token())
