@@ -6,8 +6,6 @@ import config
 from google.cloud import translate
 from deep_translator import GoogleTranslator
 
-import utils
-
 
 def get_cloud_configs():
     config.set_google_credentials()
