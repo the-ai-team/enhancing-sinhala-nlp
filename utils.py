@@ -184,3 +184,7 @@ def get_speed(content_len, start_time, current_time):
     elapsed_time = current_time - start_time
     speed = content_len / elapsed_time
     return round(speed, 2)
+
+
+def get_output_csv_path(folder: str, index: int, suffix: str, ext: str = 'csv') -> str:
+    return f'{folder}/{index}-{suffix}.{ext}'
