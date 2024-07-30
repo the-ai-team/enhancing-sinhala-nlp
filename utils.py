@@ -1,9 +1,11 @@
+import re
 import time
 import os
 from typing import List, Any
 import pandas as pd
 from pandas import DataFrame
-from errors import MaxChunkSizeExceededError, DelimiterAlreadyExistsError, TranslateIOMismatchError
+from errors import MaxChunkSizeExceededError, DelimiterAlreadyExistsError, TranslateIOMismatchError, \
+    DatasetParquetNameError
 from multi_thread_handler import mth
 
 
@@ -42,10 +44,17 @@ def load_dataset(folder_path: str, start: int = None, end: int = None) -> DataFr
     # Filter out only Parquet files
     parquet_files = [f for f in all_files if f.endswith('.parquet')]
 
+    for file in parquet_files:
+        match = re.search(r'part\.(\d+)\.parquet', file)
+        if match is None:
+            raise DatasetParquetNameError()
+
+    sorted_parquet_files = sorted(parquet_files, key=lambda x: int(re.search(r'part\.(\d+)\.parquet', x).group(1)))
+
     dataframes = []
 
     # Read each Parquet file and append to the list
-    for file in parquet_files:
+    for file in sorted_parquet_files:
         file_path = os.path.join(folder_path, file)
         df = pd.read_parquet(file_path)
         dataframes.append(df)

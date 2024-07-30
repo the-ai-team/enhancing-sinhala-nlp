@@ -6,6 +6,13 @@ class GeneralError(Exception):
         super().__init__(self.message)
 
 
+class DatasetParquetNameError(GeneralError):
+    """Raised when the dataset name does not match the expected pattern"""
+
+    def __init__(self, message="Dataset name does not match the expected pattern"):
+        super().__init__(message)
+
+
 class MaxChunkSizeExceededError(GeneralError):
     """Raised when the maximum chunk size is exceeded"""
 
