@@ -3,7 +3,10 @@ import time
 import os
 from typing import List, Any
 import pandas as pd
+from deep_translator.exceptions import BaseError
 from pandas import DataFrame
+from termcolor import colored
+
 from errors import MaxChunkSizeExceededError, DelimiterAlreadyExistsError, TranslateIOMismatchError, \
     DatasetParquetNameError
 from multi_thread_handler import mth
@@ -75,7 +78,7 @@ def load_dataset(folder_path: str, start: int = None, end: int = None) -> DataFr
 split_delimiters = ['\n', '.']
 
 
-def split_text_into_chunks(text, split_delimiter=split_delimiters[0], chunk_size=5000) -> List[str]:
+def split_text_into_chunks(text, split_delimiter=split_delimiters[0], chunk_size=4000) -> List[str]:
     # Check if the text can be split properly within the first chunk
     if len(text) > chunk_size and text.find(split_delimiter, 0, chunk_size) == -1:
         return []
@@ -131,7 +134,7 @@ def translate_by_chunk(translate_fn: callable, text: str, chunk_size=4000) -> st
 combine_delimiters = ['\n<###>\n']
 
 
-def combine_text_into_blob(content: List[str], combine_delimiter=combine_delimiters[0], max_chunk_size=5000) -> str:
+def combine_text_into_blob(content: List[str], combine_delimiter=combine_delimiters[0], max_chunk_size=4000) -> str:
     # Combine text
     combined_text = ""
     for i, text in enumerate(content):
@@ -149,7 +152,7 @@ def split_blob_into_text(blob: str, combine_delimiter=combine_delimiters[0]) -> 
     return blob.split(combine_delimiter)
 
 
-def translate_by_blob(translate_fn: callable, content: List[str], max_chunk_size=5000) -> List[str]:
+def translate_by_blob(translate_fn: callable, content: List[str], max_chunk_size=4000) -> List[str]:
     # Check whether delimiter is already exists in the text
     for text in content:
         if combine_delimiters[0] in text:
@@ -166,17 +169,22 @@ def translate_by_blob(translate_fn: callable, content: List[str], max_chunk_size
 
 
 def choose_translation_method_and_translate(translate_fn: callable, index: int, content: List[str],
-                                            max_chunk_size=5000) -> List[str]:
+                                            max_chunk_size=4000) -> List[str]:
     try:
-        translated_content = translate_by_blob(translate_fn, content, max_chunk_size)
-        current_time = get_current_time()
-        mth.safe_print(f"Translated by blob for index {index}, Time: {current_time}")
-        return translated_content
-    except MaxChunkSizeExceededError:
-        translated_content = [translate_by_chunk(translate_fn, text, max_chunk_size) for text in content]
-        current_time = get_current_time()
-        mth.safe_print(f"Translated by chunk for index {index}, Time: {current_time}")
-        return translated_content
+        try:
+            translated_content = translate_by_blob(translate_fn, content, max_chunk_size)
+            current_time = get_current_time()
+            mth.safe_print(f"Translated by blob for index {index}, Time: {current_time}")
+            return translated_content
+        except MaxChunkSizeExceededError:
+            print(f"Max size exceeded for index {index}, translating by chunk")
+            translated_content = [translate_by_chunk(translate_fn, text, max_chunk_size) for text in content]
+            current_time = get_current_time()
+            mth.safe_print(f"Translated by chunk for index {index}, Time: {current_time}")
+            return translated_content
+    except BaseError as e:
+        print(colored(f"Deep Translator Error: {e.message} at {index}", 'red'))
+        raise e
 
 
 def get_estimated_time(content_len, i, start_time, current_time):
