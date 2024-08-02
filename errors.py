@@ -53,3 +53,17 @@ class ReachedMaxRetriesError(GeneralError):
 
     def __init__(self, message="Maximum number of retries reached"):
         super().__init__(message)
+
+
+class EmptyContentError(GeneralError):
+    """Raised when the content is empty"""
+
+    def __init__(self, message="Content is empty"):
+        super().__init__(message)
+
+
+class CannotSplitIntoChunksError(GeneralError):
+    """Raised when the content cannot be split into chunks"""
+
+    def __init__(self, message="Cannot split content into chunks"):
+        super().__init__(message)

@@ -7,7 +7,7 @@ from deep_translator.exceptions import BaseError
 from pandas import DataFrame
 from termcolor import colored
 
-from errors import MaxChunkSizeExceededError, DelimiterAlreadyExistsError, TranslateIOMismatchError, \
+from errors import CannotSplitIntoChunksError, EmptyContentError, MaxChunkSizeExceededError, DelimiterAlreadyExistsError, TranslateIOMismatchError, \
     DatasetParquetNameError
 from multi_thread_handler import mth
 
@@ -156,6 +156,8 @@ def split_blob_into_text(blob: str, combine_delimiter=combine_delimiters[0]) -> 
 def translate_by_blob(translate_fn: callable, content: List[str], max_chunk_size=4000) -> List[str]:
     # Check whether delimiter is already exists in the text
     for text in content:
+        if not text.strip():
+            raise EmptyContentError()
         if combine_delimiters[0] in text:
             raise DelimiterAlreadyExistsError()
 
@@ -172,12 +174,13 @@ def translate_by_blob(translate_fn: callable, content: List[str], max_chunk_size
 def choose_translation_method_and_translate(translate_fn: callable, index: int, content: List[str],
                                             max_chunk_size=4000) -> List[str]:
     try:
+        # TODO: Use boolean flag to determine whether to use blob or chunk
         try:
             translated_content = translate_by_blob(translate_fn, content, max_chunk_size)
             current_time = get_current_time()
             mth.safe_print(f"Translated by blob for index {index}, Time: {current_time}")
             return translated_content
-        except MaxChunkSizeExceededError:
+        except (MaxChunkSizeExceededError, EmptyContentError):
             print(f"Max size exceeded for index {index}, translating by chunk")
             translated_content = [translate_by_chunk(translate_fn, text, max_chunk_size) for text in content]
             current_time = get_current_time()
@@ -185,6 +188,9 @@ def choose_translation_method_and_translate(translate_fn: callable, index: int, 
             return translated_content
     except BaseError as e:
         print(colored(f"Deep Translator Error: {e.message} at {index}", 'red'))
+        raise e
+    except Exception as e:
+        print(colored(f"Error: {e} at {index}", 'red'))
         raise e
 
 
