@@ -113,20 +113,21 @@ def translate_by_chunk(translate_fn: callable, text: str, chunk_size=4000) -> st
     if len(text) <= chunk_size:
         return translate_fn(text)
 
-    chunks = split_text_into_chunks(text, split_delimiters[0], chunk_size)
-    translated_content = ''
+    selected_delimiter_i = 0
+    chunks = []
 
+    while selected_delimiter_i < len(split_delimiters):
+        chunks = split_text_into_chunks(text, split_delimiters[selected_delimiter_i], chunk_size)
+        if chunks:
+            break
+        selected_delimiter_i += 1
+    
     if not chunks:
-        chunks = split_text_into_chunks(text, split_delimiters[1], chunk_size)
-        if not chunks:
-            raise ValueError("Cannot split text into chunks")
-        translated_chunks = [translate_fn(chunk) for chunk in chunks]
-        translated_content = connect_back_chunks(translated_chunks, split_delimiters[1])
-        mth.safe_print(f"Translated {len(chunks)} chunks, after splitting using {str(split_delimiters[1])}")
-    else:
-        translated_chunks = [translate_fn(chunk) for chunk in chunks]
-        translated_content = connect_back_chunks(translated_chunks, split_delimiters[0])
-        mth.safe_print(f"Translated {len(chunks)} chunks after splitting using {str(split_delimiters[0])}")
+        raise CannotSplitIntoChunksError()
+        
+    translated_chunks = [translate_fn(chunk) for chunk in chunks]
+    translated_content = connect_back_chunks(translated_chunks, split_delimiters[selected_delimiter_i])
+    mth.safe_print(f"Translated {len(chunks)} chunks after splitting using {str(split_delimiters[selected_delimiter_i])}")
 
     return translated_content
 
