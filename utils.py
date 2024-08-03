@@ -7,7 +7,8 @@ from deep_translator.exceptions import BaseError
 from pandas import DataFrame
 from termcolor import colored
 
-from errors import CannotSplitIntoChunksError, EmptyContentError, MaxChunkSizeExceededError, DelimiterAlreadyExistsError, TranslateIOMismatchError, \
+from errors import CannotSplitIntoChunksError, EmptyContentError, MaxChunkSizeExceededError, \
+    DelimiterAlreadyExistsError, TranslateIOMismatchError, \
     DatasetParquetNameError
 from multi_thread_handler import mth
 
@@ -62,7 +63,7 @@ def load_dataset(folder_path: str, start: int = None, end: int = None) -> DataFr
         df = pd.read_parquet(file_path)
         dataframes.append(df)
 
-    combined_df = pd.concat(dataframes)
+    combined_df = pd.concat(dataframes).reset_index(drop=True)
 
     # Apply slicing if start and/or end are not None
     if start is not None and end is not None:
@@ -121,13 +122,14 @@ def translate_by_chunk(translate_fn: callable, text: str, chunk_size=4000) -> st
         if chunks:
             break
         selected_delimiter_i += 1
-    
+
     if not chunks:
         raise CannotSplitIntoChunksError()
-        
+
     translated_chunks = [translate_fn(chunk) for chunk in chunks]
     translated_content = connect_back_chunks(translated_chunks, split_delimiters[selected_delimiter_i])
-    mth.safe_print(f"Translated {len(chunks)} chunks after splitting using {str(split_delimiters[selected_delimiter_i])}")
+    mth.safe_print(
+        f"Translated {len(chunks)} chunks after splitting using {str(split_delimiters[selected_delimiter_i])}")
 
     return translated_content
 
