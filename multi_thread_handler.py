@@ -4,7 +4,7 @@ from translate import deep_translate
 
 class MultiThreadHandler:
     def __init__(self):
-        self.MAX_REQUESTS_PER_SECOND = 5
+        self.MAX_REQUESTS_PER_SECOND = 12
         self.request_times = []
         self.request_lock = threading.Lock()
         self.print_lock = threading.Lock()
@@ -23,10 +23,13 @@ class MultiThreadHandler:
 
             # If we've made too many requests recently, wait
             if len(self.request_times) >= self.MAX_REQUESTS_PER_SECOND:
-                time.sleep(1 - (current_time - self.request_times[0]))
+                sleep_time = 1
+                self.safe_print(f"Sleeping for {sleep_time} seconds/s")
+                time.sleep(sleep_time)
 
             self.request_times.append(time.time())
 
+        self.safe_print(f"Sent a request on {round(time.time(), 3)}")
         return deep_translate(text)
 
 
