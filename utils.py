@@ -110,6 +110,10 @@ def connect_back_chunks(chunks: List[str], split_delimiter=split_delimiters[0]) 
     return connected_text
 
 
+def escape_delimiters(text: str) -> str:
+    return repr(text)[1:-1]
+
+
 def translate_by_chunk(translate_fn: callable, text: str, chunk_size=4000) -> str:
     if len(text) <= chunk_size:
         return translate_fn(text)
@@ -129,7 +133,7 @@ def translate_by_chunk(translate_fn: callable, text: str, chunk_size=4000) -> st
     translated_chunks = [translate_fn(chunk) for chunk in chunks]
     translated_content = connect_back_chunks(translated_chunks, split_delimiters[selected_delimiter_i])
     mth.safe_print(
-        f"Translated {len(chunks)} chunks after splitting using {str(split_delimiters[selected_delimiter_i])}")
+        f"Translated {len(chunks)} chunks after splitting using {escape_delimiters(split_delimiters[selected_delimiter_i])}")
 
     return translated_content
 
@@ -208,6 +212,8 @@ def get_estimated_time(content_len, i, start_time, current_time):
 
 def get_speed(content_len, start_time, current_time):
     elapsed_time = current_time - start_time
+    if elapsed_time == 0:
+        return 0
     speed = content_len / elapsed_time
     return round(speed, 2)
 
