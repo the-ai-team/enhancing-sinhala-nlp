@@ -101,8 +101,8 @@ tokenizer = AutoTokenizer.from_pretrained(base_model_name)
 def format_instructions(sample):
   outputs = []
 
-  for i in range(len(sample['Translated Output'])):
-    outputs.append(prompt_template.format(sample['Translated Input'], sample['Translated Output'][i]))
+  for i in range(len(sample['Translated Target'])):
+    outputs.append(prompt_template.format(sample['Translated Input'], sample['Translated Target'][i])+tokenizer.eos_token)
     
   return outputs
 
