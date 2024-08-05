@@ -1,6 +1,7 @@
 base_model_name = "google/gemma-2-2b" # model that we're fine-tuning
 model_name = "sihala-gemma-2b" # name of the fine-tuned model
 dataset_name = "0xAIT/sinhala-flan" # dataset to fine-tune on
+subset_name = "cot_fsopt"
 
 ## Training Arguments - mostly copied from https://github.com/TeluguLLMLabs/Indic-gemma-7b-Navarasa/blob/main/training.ipynb
 output_dir = f"models/{model_name}"
@@ -112,13 +113,13 @@ def formatting_prompts_func(examples):
         texts.append(text)
     return { "text" : texts, }
 
-def format_dataset(name):
-    dataset = load_dataset(name)
+def format_dataset():
+    dataset = load_dataset(dataset_name, subset_name)
     formatted_dataset = dataset.map(formatting_prompts_func)
     return formatted_dataset
 
 base_model = AutoModelForCausalLM.from_pretrained(base_model_name, torch_dtype=torch.bfloat16)
-dataset = format_dataset(dataset_name)
+dataset = format_dataset()
 
 training_arguments = TrainingArguments(
     output_dir=output_dir,
