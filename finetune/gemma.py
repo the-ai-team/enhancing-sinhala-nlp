@@ -62,9 +62,6 @@ logging_steps = 10
 # Pack multiple short examples in the same input sequence to increase efficiency and make training 5x faster for short sequences.
 packing = False
 
-# text field in dataset
-dataset_text_field = "text"
-
 # dataset para,
 dataset_num_proc = 2
 
@@ -101,28 +98,16 @@ os.environ["WANDB_LOG_MODEL"] = "false"  # don't log model checkpoints
 
 tokenizer = AutoTokenizer.from_pretrained(base_model_name)
 
-def formatting_prompts_func(examples):
-    inputs       = examples["Translated Input"]
-    outputs      = examples["Translated Target"]
-    texts = []
-    for input, output in zip(inputs, outputs):
-        if input is None:
-            input = ""
+def format_instructions(sample):
+  outputs = []
 
-        if output is None:
-            output = ""
-        # Must add EOS_TOKEN, otherwise your generation will go on forever!
-        text = prompt_template.format(input, output) + tokenizer.eos_token
-        texts.append(text)
-    return { "text" : texts, }
-
-def format_dataset():
-    dataset = load_dataset(dataset_name, subset_name)[subset_name]
-    formatted_dataset = dataset.map(formatting_prompts_func)
-    return formatted_dataset
+  for i in range(len(sample['Translated Output'])):
+    outputs.append(prompt_template.format(sample['Translated Input'], sample['Translated Output'][i]))
+    
+  return outputs
 
 base_model = AutoModelForCausalLM.from_pretrained(base_model_name, torch_dtype=torch.bfloat16)
-dataset = format_dataset()
+dataset = load_dataset(dataset_name, subset_name)[subset_name]
 
 training_arguments = TrainingArguments(
     output_dir=output_dir,
@@ -148,11 +133,12 @@ trainer = SFTTrainer(
     model = base_model,
     tokenizer = tokenizer,
     train_dataset = dataset,
-    dataset_text_field = dataset_text_field,
     max_seq_length = max_seq_length,
     dataset_num_proc = dataset_num_proc,
     packing = packing,
     args = training_arguments,
+    formatting_func=format_instructions,
+
 )
 
 trainer.train()
