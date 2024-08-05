@@ -124,7 +124,6 @@ training_arguments = TrainingArguments(
 
 trainer = SFTTrainer(
     model = base_model,
-    tokenizer = tokenizer,
     train_dataset = dataset,
     max_seq_length = max_seq_length,
     packing = packing,
