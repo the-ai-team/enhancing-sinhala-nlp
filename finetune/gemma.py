@@ -114,7 +114,7 @@ def formatting_prompts_func(examples):
     return { "text" : texts, }
 
 def format_dataset():
-    dataset = load_dataset(dataset_name, subset_name)
+    dataset = load_dataset(dataset_name, subset_name)[subset_name]
     formatted_dataset = dataset.map(formatting_prompts_func)
     return formatted_dataset
 
