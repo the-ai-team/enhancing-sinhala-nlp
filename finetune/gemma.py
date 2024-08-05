@@ -60,7 +60,7 @@ save_steps = 10000
 logging_steps = 10
 
 # Pack multiple short examples in the same input sequence to increase efficiency and make training 5x faster for short sequences.
-packing = True
+packing = False
 
 # text field in dataset
 dataset_text_field = "text"
