@@ -7,7 +7,7 @@ output_dir = f"models/{model_name}"
 
 
 # Number of training epochs
-num_train_epochs = 2
+num_train_epochs = 4
 
 max_seq_length = 2048
 
