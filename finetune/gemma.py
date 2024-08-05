@@ -62,13 +62,6 @@ logging_steps = 10
 # Pack multiple short examples in the same input sequence to increase efficiency and make training 5x faster for short sequences.
 packing = False
 
-# dataset para,
-dataset_num_proc = 2
-
-# Load the entire model on the GPU 0
-# device_map = {"": 0}
-device_map = "auto"
-
 # monitoring
 report_to = "wandb"
 
@@ -134,11 +127,9 @@ trainer = SFTTrainer(
     tokenizer = tokenizer,
     train_dataset = dataset,
     max_seq_length = max_seq_length,
-    dataset_num_proc = dataset_num_proc,
     packing = packing,
     args = training_arguments,
     formatting_func=format_instructions,
-
 )
 
 trainer.train()
