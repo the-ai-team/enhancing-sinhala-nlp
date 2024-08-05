@@ -108,6 +108,9 @@ def formatting_prompts_func(examples):
     for input, output in zip(inputs, outputs):
         if input is None:
             input = ""
+
+        if output is None:
+            output = ""
         # Must add EOS_TOKEN, otherwise your generation will go on forever!
         text = prompt_template.format(input, output) + tokenizer.eos_token
         texts.append(text)
