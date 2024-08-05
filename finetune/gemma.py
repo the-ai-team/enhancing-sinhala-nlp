@@ -120,6 +120,7 @@ def format_dataset():
 
 base_model = AutoModelForCausalLM.from_pretrained(base_model_name, torch_dtype=torch.bfloat16)
 dataset = format_dataset()
+tokenizer.pad_token = tokenizer.eos_token
 
 training_arguments = TrainingArguments(
     output_dir=output_dir,
