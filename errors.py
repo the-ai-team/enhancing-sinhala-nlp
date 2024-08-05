@@ -13,27 +13,6 @@ class DatasetParquetNameError(GeneralError):
         super().__init__(message)
 
 
-class MaxChunkSizeExceededError(GeneralError):
-    """Raised when the maximum chunk size is exceeded"""
-
-    def __init__(self, message="Maximum chunk size exceeded"):
-        super().__init__(message)
-
-
-class DelimiterAlreadyExistsError(GeneralError):
-    """Raised when the delimiter already exists"""
-
-    def __init__(self, message="Delimiter already exists"):
-        super().__init__(message)
-
-
-class TranslateIOMismatchError(GeneralError):
-    """Raised when the input and output count of the translation does not match"""
-
-    def __init__(self, message="Input and output count of the translation does not match"):
-        super().__init__(message)
-
-
 class InvalidOutputError(GeneralError):
     """Raised when the output of a function is invalid"""
 
@@ -55,14 +34,45 @@ class ReachedMaxRetriesError(GeneralError):
         super().__init__(message)
 
 
-class EmptyContentError(GeneralError):
+class TranslationError(GeneralError):
+    """Raised when a general error occurs during translation"""
+
+    def __init__(self, message="General error occurred during translation"):
+        message = f"[TranslationError] {message}"
+        super().__init__(message)
+
+
+class EmptyContentError(TranslationError):
     """Raised when the content is empty"""
 
     def __init__(self, message="Content is empty"):
         super().__init__(message)
 
 
-class CannotSplitIntoChunksError(GeneralError):
+class DelimiterAlreadyExistsError(TranslationError):
+    """Raised when the delimiter already exists"""
+
+    def __init__(self, message="Delimiter already exists"):
+        super().__init__(message)
+
+
+
+class MaxChunkSizeExceededError(TranslationError):
+    """Raised when the maximum chunk size is exceeded"""
+
+    def __init__(self, message="Maximum chunk size exceeded"):
+        super().__init__(message)
+
+
+class TranslateIOMismatchError(TranslationError):
+    """Raised when the input and output count of the translation does not match"""
+
+    def __init__(self, message="Input and output count of the translation does not match"):
+        super().__init__(message)
+
+
+
+class CannotSplitIntoChunksError(TranslationError):
     """Raised when the content cannot be split into chunks"""
 
     def __init__(self, message="Cannot split content into chunks"):

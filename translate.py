@@ -1,4 +1,5 @@
 # Google Cloud SDK Translate
+from typing import List
 from deep_translator.exceptions import RequestError
 from google.cloud.translate_v3 import TranslateTextResponse
 
@@ -8,15 +9,15 @@ from deep_translator import GoogleTranslator
 
 
 def get_cloud_configs():
-    config.set_google_credentials()
-    parent = f"projects/{config.PROJECT_ID}"
+    project_id = config.get_project_id()
+    parent = f"projects/{project_id}"
     client = translate.TranslationServiceClient()
     return parent, client
 
 
-def google_cloud_translate(content: list[str], parent: str,
-                           client: translate.TranslationServiceClient) -> TranslateTextResponse:
-    return client.translate_text(
+def google_cloud_translate(content: list[str]) -> List[str]:
+    parent, client = get_cloud_configs()
+    result = client.translate_text(
         request={
             "parent": parent,
             "contents": content,
@@ -25,6 +26,7 @@ def google_cloud_translate(content: list[str], parent: str,
             "target_language_code": "si",
         }
     )
+    return [translation.translated_text for translation in result.translations]
 
 
 def deep_translate(text: str) -> str:

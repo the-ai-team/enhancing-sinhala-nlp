@@ -3,13 +3,13 @@ import time
 import os
 from typing import List, Any
 import pandas as pd
-from deep_translator.exceptions import BaseError
+from deep_translator.exceptions import BaseError, RequestError
 from pandas import DataFrame
 from termcolor import colored
 
 from errors import CannotSplitIntoChunksError, EmptyContentError, MaxChunkSizeExceededError, \
     DelimiterAlreadyExistsError, TranslateIOMismatchError, \
-    DatasetParquetNameError
+    DatasetParquetNameError, TranslationError
 from multi_thread_handler import mth
 
 
@@ -76,64 +76,57 @@ def load_dataset(folder_path: str, start: int = None, end: int = None) -> DataFr
         return combined_df
 
 
-split_delimiters = ['\n', '.']
+default_split_delimiters = ['\n', '.']
 
-
-def split_text_into_chunks(text, split_delimiter=split_delimiters[0], chunk_size=4000) -> List[str]:
-    # Check if the text can be split properly within the first chunk
-    if len(text) > chunk_size and text.find(split_delimiter, 0, chunk_size) == -1:
-        return []
-
+def split_text_into_chunks(text, split_delimiters=default_split_delimiters, chunk_size=4000) -> List[str]:
+    def find_best_delimiter(text_slice):
+        best_delimiter = None
+        best_index = -1
+        for delimiter in split_delimiters:
+            index = text_slice.rfind(delimiter)
+            if index > best_index:
+                best_index = index
+                best_delimiter = delimiter
+        return best_delimiter, best_index
+    
     chunks = []
+
     while text:
         if len(text) <= chunk_size:
             chunks.append(text)
             break
 
-        split_index = text.rfind(split_delimiter, 0, chunk_size)
+        text_slice = text[:chunk_size]
+        best_delimiter, split_index = find_best_delimiter(text_slice)
 
         if split_index == -1:
-            return []
+            raise CannotSplitIntoChunksError()
 
-        chunks.append(text[:split_index])
-        text = text[split_index:].lstrip(split_delimiter)
+        index_with_delimiter = split_index + len(best_delimiter)
+        chunks.append(text[:index_with_delimiter])
+        text = text[index_with_delimiter:]
+
     return chunks
 
 
-def connect_back_chunks(chunks: List[str], split_delimiter=split_delimiters[0]) -> str:
-    connected_text = ""
-    for i, chunk in enumerate(chunks):
-        if i < len(chunks) - 1:
-            connected_text += chunk + split_delimiter
-        else:
-            connected_text += chunk
-    return connected_text
+def connect_back_chunks(chunks: List[str]) -> str:
+    return ''.join(chunks)
 
 
 def escape_delimiters(text: str) -> str:
     return repr(text)[1:-1]
 
 
-def translate_by_chunk(translate_fn: callable, text: str, chunk_size=4000) -> str:
+def translate_by_chunk(translate_fn: callable, text: str, chunk_size=4000, split_delimiters=default_split_delimiters) -> str:
     if len(text) <= chunk_size:
         return translate_fn(text)
 
-    selected_delimiter_i = 0
-    chunks = []
-
-    while selected_delimiter_i < len(split_delimiters):
-        chunks = split_text_into_chunks(text, split_delimiters[selected_delimiter_i], chunk_size)
-        if chunks:
-            break
-        selected_delimiter_i += 1
-
-    if not chunks:
-        raise CannotSplitIntoChunksError()
+    chunks = split_text_into_chunks(text, split_delimiters, chunk_size)
 
     translated_chunks = [translate_fn(chunk) for chunk in chunks]
-    translated_content = connect_back_chunks(translated_chunks, split_delimiters[selected_delimiter_i])
+    translated_content = connect_back_chunks(translated_chunks)
     mth.safe_print(
-        f"Translated {len(chunks)} chunks after splitting using {escape_delimiters(split_delimiters[selected_delimiter_i])}")
+        f"Translated {len(chunks)} chunks after splitting.")
 
     return translated_content
 
@@ -177,21 +170,59 @@ def translate_by_blob(translate_fn: callable, content: List[str], max_chunk_size
     return split_content
 
 
-def choose_translation_method_and_translate(translate_fn: callable, index: int, content: List[str],
+def translate_by_sdk(translate_sdk_fn: callable, content: List[str], max_chunk_size=30000) -> List[str]:
+    # Check if the total content length exceeds the maximum chunk size. If it does not, translate the content as a whole
+    total_content_length = sum([len(text) for text in content])
+    if total_content_length <= max_chunk_size:
+        return translate_sdk_fn(content)
+
+
+    translated_content = []
+    split_delimeters = ['\n', '.', '   ']
+    for i, text in enumerate(content):
+        if len(text) >= max_chunk_size:
+            chunks = split_text_into_chunks(text, split_delimiters=split_delimeters, chunk_size=max_chunk_size)
+
+            translated_chunks = []
+            for chunk in chunks:
+                translated_chunks.extend(translate_sdk_fn([chunk]))
+
+            translated_text = connect_back_chunks(translated_chunks)
+            translated_content.append(translated_text)
+
+        else:
+            translated_content.extend(translate_sdk_fn([text]))
+
+    return translated_content
+
+
+
+def choose_translation_method_and_translate(translate_fn: callable, translate_sdk_fn: callable, index: int, content: List[str],
                                             max_chunk_size=4000) -> List[str]:
     try:
-        # TODO: Use boolean flag to determine whether to use blob or chunk
         try:
             translated_content = translate_by_blob(translate_fn, content, max_chunk_size)
+
             current_time = get_current_time()
             mth.safe_print(f"Translated by blob for index {index}, Time: {current_time}")
             return translated_content
-        except (MaxChunkSizeExceededError, EmptyContentError):
-            print(f"Max size exceeded for index {index}, translating by chunk")
-            translated_content = [translate_by_chunk(translate_fn, text, max_chunk_size) for text in content]
-            current_time = get_current_time()
-            mth.safe_print(f"Translated by chunk for index {index}, Time: {current_time}")
-            return translated_content
+        
+        except (TranslationError, RequestError) as e:
+            try:
+                mth.safe_print(colored(f"Translate by blob for index {index} failed, trying by chunks. Error: {e}", "yellow"))
+                translated_content = [translate_by_chunk(translate_fn, text, max_chunk_size) for text in content]
+
+                current_time = get_current_time()
+                mth.safe_print(f"Translated by chunk for index {index}, Time: {current_time}")
+                return translated_content
+            except (TranslationError, RequestError) as e:
+                mth.safe_print(colored(f"Translate by chunk for index {index} failed, trying with SDK. Error: {e}", "yellow"))
+                translated_content = translate_by_sdk(translate_sdk_fn, content)
+
+                current_time = get_current_time()
+                mth.safe_print(f"Translated by SDK for index {index}, Time: {current_time}")
+                return translated_content
+
     except BaseError as e:
         print(colored(f"Deep Translator Error: {e.message} at {index}", 'red'))
         raise e

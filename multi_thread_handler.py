@@ -1,5 +1,6 @@
 import threading, time, sys
-from translate import deep_translate
+from typing import List
+from translate import deep_translate, google_cloud_translate
 
 
 class MultiThreadHandler:
@@ -31,6 +32,9 @@ class MultiThreadHandler:
 
         self.safe_print(f"Sent a request on {round(time.time(), 3)}")
         return deep_translate(text)
+    
+    def sdk_translate(self, text: List[str]) -> List[str]:
+        return google_cloud_translate(text)
 
 
 mth = MultiThreadHandler()
