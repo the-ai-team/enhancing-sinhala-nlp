@@ -60,7 +60,7 @@ save_steps = 10000
 logging_steps = 10
 
 # Pack multiple short examples in the same input sequence to increase efficiency and make training 5x faster for short sequences.
-packing = False 
+packing = True
 
 # text field in dataset
 dataset_text_field = "text"
@@ -120,7 +120,6 @@ def format_dataset():
 
 base_model = AutoModelForCausalLM.from_pretrained(base_model_name, torch_dtype=torch.bfloat16)
 dataset = format_dataset()
-tokenizer.pad_token = tokenizer.eos_token
 
 training_arguments = TrainingArguments(
     output_dir=output_dir,
@@ -144,6 +143,7 @@ training_arguments = TrainingArguments(
 
 trainer = SFTTrainer(
     model = base_model,
+    tokenizer = tokenizer,
     train_dataset = dataset,
     dataset_text_field = dataset_text_field,
     max_seq_length = max_seq_length,
