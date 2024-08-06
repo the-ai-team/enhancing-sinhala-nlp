@@ -118,6 +118,9 @@ def escape_delimiters(text: str) -> str:
 
 
 def translate_by_chunk(translate_fn: callable, text: str, chunk_size=4000, split_delimiters=default_split_delimiters) -> str:
+    if not text.strip():
+        return text
+
     if len(text) <= chunk_size:
         return translate_fn(text)
 
