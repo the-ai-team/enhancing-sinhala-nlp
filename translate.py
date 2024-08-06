@@ -7,6 +7,8 @@ import config
 from google.cloud import translate
 from deep_translator import GoogleTranslator
 
+from errors import EmptyOutputError
+
 
 def get_cloud_configs():
     project_id = config.get_project_id()
@@ -30,4 +32,7 @@ def google_cloud_translate(content: list[str]) -> List[str]:
 
 
 def deep_translate(text: str) -> str:
-    return GoogleTranslator(source='en', target='si').translate(text=text)
+    result = GoogleTranslator(source='en', target='si').translate(text=text)
+    if not result:
+        raise EmptyOutputError()
+    return result

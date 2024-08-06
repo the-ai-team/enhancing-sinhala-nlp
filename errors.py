@@ -49,6 +49,13 @@ class EmptyContentError(TranslationError):
         super().__init__(message)
 
 
+class EmptyOutputError(TranslationError):
+    """Raised when the output is empty"""
+
+    def __init__(self, message="Output is empty"):
+        super().__init__(message)
+
+
 class DelimiterAlreadyExistsError(TranslationError):
     """Raised when the delimiter already exists"""
 
