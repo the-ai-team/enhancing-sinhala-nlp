@@ -97,7 +97,7 @@ def format_instructions(sample):
     
   return outputs
 
-base_model = AutoModelForCausalLM.from_pretrained(base_model_name, load_in_8bit=True, attn_implementation="eager")
+base_model = AutoModelForCausalLM.from_pretrained(base_model_name, torch_dtype=torch.bfloat16, attn_implementation="eager")
 dataset = load_dataset(dataset_name, subset_name)[subset_name]
 
 training_arguments = TrainingArguments(
