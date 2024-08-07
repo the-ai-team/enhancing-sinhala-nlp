@@ -13,8 +13,8 @@ num_train_epochs = 4
 max_seq_length =1024 
 
 # Enable fp16/bf16 training (set bf16 to True with an A100)
-fp16 = True
-bf16 = False 
+fp16 = False
+bf16 = True 
 
 # Batch size per GPU for training
 per_device_train_batch_size = 1
@@ -87,6 +87,7 @@ os.environ["WANDB_PROJECT"] = "sinhala-aya"
 os.environ["WANDB_LOG_MODEL"] = "false"  # don't log model checkpoints
 
 tokenizer = AutoTokenizer.from_pretrained(base_model_name)
+tokenizer.padding_side = "right"
 
 def format_instructions(sample):
   outputs = []
@@ -96,7 +97,7 @@ def format_instructions(sample):
     
   return outputs
 
-base_model = AutoModelForCausalLM.from_pretrained(base_model_name, torch_dtype=torch.bfloat16)
+base_model = AutoModelForCausalLM.from_pretrained(base_model_name, torch_dtype=torch.bfloat16, attn_implementation="eager")
 dataset = load_dataset(dataset_name, subset_name)[subset_name]
 
 training_arguments = TrainingArguments(
@@ -125,6 +126,7 @@ trainer = SFTTrainer(
     packing = packing,
     args = training_arguments,
     formatting_func=format_instructions,
+    tokenizer=tokenizer,
 )
 
 trainer.train()
