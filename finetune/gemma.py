@@ -10,7 +10,7 @@ output_dir = f"models/{model_name}"
 # Number of training epochs
 num_train_epochs = 4
 
-max_seq_length =1024 
+max_seq_length =512 
 
 # Enable fp16/bf16 training (set bf16 to True with an A100)
 fp16 = False
@@ -97,7 +97,7 @@ def format_instructions(sample):
     
   return outputs
 
-base_model = AutoModelForCausalLM.from_pretrained(base_model_name, torch_dtype=torch.bfloat16, attn_implementation="eager")
+base_model = AutoModelForCausalLM.from_pretrained(base_model_name, load_in_8bit=True, attn_implementation="eager")
 dataset = load_dataset(dataset_name, subset_name)[subset_name]
 
 training_arguments = TrainingArguments(
