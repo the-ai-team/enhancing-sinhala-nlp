@@ -10,11 +10,11 @@ output_dir = f"models/{model_name}"
 # Number of training epochs
 num_train_epochs = 4
 
-max_seq_length = 2048
+max_seq_length =1024 
 
 # Enable fp16/bf16 training (set bf16 to True with an A100)
-fp16 = False
-bf16 = True
+fp16 = True
+bf16 = False 
 
 # Batch size per GPU for training
 per_device_train_batch_size = 1
@@ -42,9 +42,6 @@ optim = "paged_adamw_32bit"
 
 # Learning rate schedule
 lr_scheduler_type = "cosine"
-
-# Number of training steps (overrides num_train_epochs)
-max_steps = -1
 
 # Ratio of steps for a linear warmup (from 0 to learning rate)
 warmup_ratio = 0.03
@@ -95,7 +92,7 @@ def format_instructions(sample):
   outputs = []
 
   for i in range(len(sample['Translated Target'])):
-    outputs.append(prompt_template.format(sample['Translated Input'], sample['Translated Target'][i])+tokenizer.eos_token)
+    outputs.append(prompt_template.format(sample['Translated Input'][i], sample['Translated Target'][i])+tokenizer.eos_token)
     
   return outputs
 
@@ -115,7 +112,6 @@ training_arguments = TrainingArguments(
     fp16=fp16,
     bf16=bf16,
     max_grad_norm=max_grad_norm,
-    max_steps=max_steps,
     warmup_ratio=warmup_ratio,
     group_by_length=group_by_length,
     lr_scheduler_type=lr_scheduler_type,
