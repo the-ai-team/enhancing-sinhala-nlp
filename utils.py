@@ -227,10 +227,10 @@ def choose_translation_method_and_translate(translate_fn: callable, translate_sd
                 return translated_content
 
     except BaseError as e:
-        print(colored(f"Deep Translator Error: {e.message} at {index}", 'red'))
+        mth.safe_print(colored(f"Deep Translator Error: {e.message} at {index}", 'red'))
         raise e
     except Exception as e:
-        print(colored(f"Error: {e} at {index}", 'red'))
+        mth.safe_print(colored(f"Error: {e} at {index}", 'red'))
         raise e
 
 
